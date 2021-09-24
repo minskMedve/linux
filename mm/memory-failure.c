@@ -294,6 +294,7 @@ static unsigned long dev_pagemap_mapping_shift(struct page *page,
 		struct vm_area_struct *vma)
 {
 	unsigned long address = vma_address(page, vma);
+	unsigned long ret = 0;
 	pgd_t *pgd;
 	p4d_t *p4d;
 	pud_t *pud;
@@ -317,11 +318,10 @@ static unsigned long dev_pagemap_mapping_shift(struct page *page,
 	if (pmd_devmap(*pmd))
 		return PMD_SHIFT;
 	pte = pte_offset_map(pmd, address);
-	if (!pte_present(*pte))
-		return 0;
-	if (pte_devmap(*pte))
-		return PAGE_SHIFT;
-	return 0;
+	if (pte_present(*pte) && pte_devmap(*pte))
+		ret = PAGE_SHIFT;
+	pte_unmap(pte);
+	return ret;
 }
 
 /*
